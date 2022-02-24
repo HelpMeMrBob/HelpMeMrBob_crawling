@@ -1,6 +1,7 @@
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from DBconn import connect
 
 driver = webdriver.Chrome()
 
@@ -12,10 +13,9 @@ search.send_keys("금천구 식당")
 search.send_keys(Keys.ENTER)
 sleep(2)
 
-b = 1 #무한루프 확인용 리스트 블록 인덱스
+b = 1 #페이지 블록 확인용 인덱스
 
 # 1페이지부터 34페이지까지 크롤링
-# 이렇게 하면 종료될때 프로그램이 뻗으면서 하드랜딩하게 되는데 소프트랜딩할 방법을 생각해보자.
 while b<=7 :
         
     sleep(2)
@@ -28,6 +28,10 @@ while b<=7 :
         # 리스트 한페이지의 업체'상세보기'(15개)를 차례대로 들어가면서 크롤링해옴
         i = 1 #'상세보기' 요소를 위한 인덱스
         while i<=16:    
+            
+            # 데이터 저장용 딕셔너리 준비
+            bundle = {'idx':None,'food':'null','place':None,'address':None,'plcNum':None,'menu':None,'price':None,'operTime':None}
+            
             # detail_page = 상세보기 요소
             # li 태그 안에 상세보기 요소가 없다면 예외처리(광고로 판정)
             detail_page_xpath = '//*[@id="info.search.place.list"]/li['+str(i)+']/div[5]/div[4]/a[1]'
@@ -47,6 +51,8 @@ while b<=7 :
             print("###idx 파싱완료###", idx)
             # 최종적으로 idx가 식당 인덱스
             
+            bundle['idx'] = idx
+            
             detail_page.send_keys(Keys.ENTER)
             # 새 탭 열림
             driver.switch_to.window(driver.window_handles[1])
@@ -56,8 +62,10 @@ while b<=7 :
             place_xpath = '//*[@id="mArticle"]/div[1]/div[1]/div[2]/div/h2'
             place = driver.find_element_by_xpath(place_xpath).get_attribute("textContent")
             place = str(place).strip() # 공백제거
-            print("###식당이름 파싱완료###", place) #### place 파싱할 예정
+            print("###식당이름 파싱완료###", place) 
             # 최종적으로 place가 식당 이름
+            
+            bundle['place'] = place
             
             # address = 식당 주소
             addr_xpath = '//*[@id="mArticle"]/div[1]/div[2]/div[1]/div/span[1]'
@@ -67,7 +75,9 @@ while b<=7 :
             if iAddr != -1:
                 address = str(address)[0:iAddr]
             address = address.strip() #공백제거
-            print("###식당주소 파싱완료###", address)            
+            print("###식당주소 파싱완료###", address)      
+            
+            bundle['address'] = address      
             
             # plcNum = 식당 전화번호
             # 식당 전화번호 없을 시 예외처리(null값 입력)
@@ -79,6 +89,8 @@ while b<=7 :
             except Exception :
                 plcNum = "null"
                 print("###식당전화번호 없는 경우###", plcNum)
+            
+            bundle['plcNum'] = plcNum
 
             ################### 영업시간 ###################
 
@@ -92,6 +104,8 @@ while b<=7 :
             except Exception :
                 operTime = "null"
                 print('###영업시간,요일 없는 경우###', operTime)
+            
+            bundle['operTime'] = operTime
 
             # 휴무일
             # 영업시간 더보기 버튼이 존재하지 않을경우 예외처리(null값 입력)
@@ -142,6 +156,11 @@ while b<=7 :
                 m = m+1
             print('###메뉴 이름을 문자열로 연결###', menus)
             print('###메뉴 가격을 문자열로 연결###', prices)
+            
+            bundle['menu'] = menus
+            bundle['price'] = prices       
+            print("DBconn.connect()로 전달할 bundle 딕셔너리", bundle)   
+            connect(**bundle)
                 
             # 창닫기
             driver.close()
