@@ -1,9 +1,10 @@
+import imp
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
 driver = webdriver.Chrome()
-html = driver.page_source
+os.environ["NLS_LANG"] = ".AL32UTF8"
 
 driver.get("https://map.kakao.com/")
 # search = 카카오맵의 검색창
@@ -125,14 +126,16 @@ while b<=7 :
                     menuName = str(menuName).strip() #공백제거
                     #print('#메뉴이름#', menuName)
                     menus = menus + menuName + '|'
-                    
-                    # 메뉴 가격
-                    price_xpath = '//*[@id="mArticle"]/div[3]/ul/li['+str(m)+']/div/em[2]'
-                    price = driver.find_element_by_xpath(price_xpath).get_attribute("innerText")
-                    price = str(price).strip() #공백제거
-                    price = price.split('\n')[1] #가격:\n18,000 에서 순수한 가격만 추출
-                    #print('#메뉴가격#', price)
-                    prices = prices + price + '|'
+                    try :
+                        # 메뉴 가격
+                        price_xpath = '//*[@id="mArticle"]/div[3]/ul/li['+str(m)+']/div/em[2]'
+                        price = driver.find_element_by_xpath(price_xpath).get_attribute("innerText")
+                        price = str(price).strip() #공백제거
+                        price = price.split('\n')[1] #가격:\n18,000 에서 순수한 가격만 추출
+                        #print('#메뉴가격#', price)
+                        prices = prices + price + '|'
+                    except Exception :
+                        prices = "null|"
                     
                 except Exception :
                     menus = menus[:-1] #마지막 파이프(|)를 제거
@@ -174,7 +177,3 @@ while b<=7 :
     nextBlock = driver.find_element_by_xpath(nextBlock_xpath).send_keys(Keys.RETURN)
 
 print("크롤링 종료.")
-
-
-        
-    
