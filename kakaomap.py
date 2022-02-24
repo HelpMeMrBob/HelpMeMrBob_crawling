@@ -1,10 +1,8 @@
-import imp
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
 driver = webdriver.Chrome()
-os.environ["NLS_LANG"] = ".AL32UTF8"
 
 driver.get("https://map.kakao.com/")
 # search = 카카오맵의 검색창
